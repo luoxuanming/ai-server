@@ -161,7 +161,7 @@ router.post('/send', authMiddleware, async (req, res) => {
       'INSERT INTO messages (session_id, email, content, role) VALUES (?, ?, ?, ?)',
       [sessionId, email, message, 'user']
     );
-    const [users] = await pool.execute('SELECT (session_id, email, content, role) FROM messages WHERE email = ? AND role = ?', [email, 'user'])
+    const [users] = await pool.execute('SELECT session_id, email, content, role FROM messages WHERE email = ? AND role = ?', [email, 'user'])
     console.log('users刚写入后的数据', [users])
     // 2. 从数据库读取完整历史（实现多轮对话记忆）
     const [rows] = await pool.execute(
