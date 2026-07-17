@@ -120,6 +120,7 @@ router.get('/history/:sessionId', async (req, res) => {
 // POST /api/chat/send 接口里，如果没有 sessionId 就自动创建
 // 发送消息（流式响应，打字机效果）
 router.post('/send', authMiddleware, async (req, res) => {
+  console.log('/send接口----请求参数', req);
   let { sessionId, message } = req.body;
   const { email } = req.user;
 
