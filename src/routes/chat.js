@@ -177,7 +177,6 @@ router.post('/send', authMiddleware, async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    res.write(`data: ${JSON.stringify({ sessionId })}\n\n`);
     // 4. 调用 AI，流式输出
     const ai = getAIClient();
     let fullReply = ''; // 收集完整回复，最后存数据库
@@ -217,13 +216,29 @@ router.post('/send', authMiddleware, async (req, res) => {
           "model": "deepseek-ai/DeepSeek-V3",
           messages: [
             { role: 'system', content: '你是一个友好、专业的 AI 助手，用中文回答用户的问题。' },
-            ...historyMessages,
+            ...historyMessages.slice(-8),
           ],
           stream: true,
-          max_tokens: 2048,
+          max_tokens: 512,
         }),
       });
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('SiliconFlow 调用失败:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+        });
+    
+        throw new Error(`SiliconFlow ${response.status}: ${errorText}`);
+      }
+    
+      if (!response.body) {
+        throw new Error('SiliconFlow 未返回响应流');
+      }
+      res.write(`data: ${JSON.stringify({ sessionId })}\n\n`);
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       
