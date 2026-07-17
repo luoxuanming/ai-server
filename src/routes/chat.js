@@ -128,6 +128,7 @@ router.post('/send', authMiddleware, async (req, res) => {
     'SELECT quota, status FROM users WHERE email = ?',
     [email]
   );
+  console.log('用户列表：', [userRows]);
   if (userRows.length === 0) {
     return res.status(401).json({ error: '用户不存在' });
   }
@@ -159,6 +160,8 @@ router.post('/send', authMiddleware, async (req, res) => {
       'INSERT INTO messages (session_id, email, content, role) VALUES (?, ?, ?, ?)',
       [sessionId, email, message, 'user']
     );
+    const [users] = await pool.execute('SELECT (session_id, email, content, role) FROM messages WHERE email = ? AND role = ?', [email, 'user'])
+    console.log('users刚写入后的数据', [users])
     // 2. 从数据库读取完整历史（实现多轮对话记忆）
     const [rows] = await pool.execute(
       'SELECT role, content FROM messages WHERE session_id = ? ORDER BY created_at ASC',
